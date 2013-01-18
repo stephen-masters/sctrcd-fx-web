@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.co.scattercode.beans.BeanMatcher;
-import uk.co.scattercode.beans.BeanMatcher;
 
 /**
  * 
