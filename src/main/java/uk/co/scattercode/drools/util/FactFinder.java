@@ -1,0 +1,56 @@
+package uk.co.scattercode.drools.util;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Collection;
+
+import org.drools.runtime.ObjectFilter;
+import org.drools.runtime.StatefulKnowledgeSession;
+import org.drools.runtime.rule.FactHandle;
+
+import uk.co.scattercode.beans.BeanMatcher;
+import uk.co.scattercode.beans.BeanPropertyFilter;
+
+public class FactFinder {
+
+	BeanMatcher beanMatcher  = new BeanMatcher();
+	
+    /**
+	 * A more complex assertion that a fact of the expected class with specified
+	 * properties is in working memory.
+	 * 
+	 * @param factName
+	 *            The simple name of the class of the fact we're looking for.
+	 * @param expectedProperties
+	 *            A sequence of expected property name/value pairs.
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 * @throws NoSuchMethodException
+	 */
+    public Collection<Object> findFact(
+    		final StatefulKnowledgeSession session, 
+    		final String factClass, 
+    		final BeanPropertyFilter... expectedProperties) {
+
+        ObjectFilter filter = new ObjectFilter() {
+            @Override
+            public boolean accept(Object object) {
+                return object.getClass().getSimpleName().equals(factClass);
+            }
+        };
+
+        Collection<FactHandle> factHandles = session.getFactHandles(filter);
+        Collection<Object> facts = new ArrayList<Object>();
+        for (FactHandle handle : factHandles) {
+            Object fact = session.getObject(handle);
+            if (beanMatcher.matches(fact, expectedProperties)) {
+                facts.add(fact);
+            }
+        }
+        return facts;
+    }
+	
+}
