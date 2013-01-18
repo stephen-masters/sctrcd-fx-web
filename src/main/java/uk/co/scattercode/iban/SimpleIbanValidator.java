@@ -49,7 +49,7 @@ public class SimpleIbanValidator implements IbanValidator {
 	 * 
 	 * @see{Mod97IbanValidator for details of the MOD-97 check.
 	 */
-    public boolean isValid(String iban) {
+    private boolean isValid(String iban) {
     	if (iban == null) {
     		return false;
     	}

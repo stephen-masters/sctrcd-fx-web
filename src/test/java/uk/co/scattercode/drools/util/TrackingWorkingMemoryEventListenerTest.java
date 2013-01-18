@@ -78,18 +78,18 @@ public class TrackingWorkingMemoryEventListenerTest extends AbstractStatefulRule
         TrackingAgendaEventListener agendaListener = new TrackingAgendaEventListener();
         TrackingWorkingMemoryEventListener workingMemoryListener = new TrackingWorkingMemoryEventListener();
         
-        knowledgeEnvironment.knowledgeSession.addEventListener(agendaListener);
-        knowledgeEnvironment.knowledgeSession.addEventListener(workingMemoryListener);
+        kenv.knowledgeSession.addEventListener(agendaListener);
+        kenv.knowledgeSession.addEventListener(workingMemoryListener);
         
-        FactHandle productHandle = knowledgeEnvironment.knowledgeSession.insert(new Product("Book", 20));
-        FactHandle customerHandle = knowledgeEnvironment.knowledgeSession.insert(new Customer("Jimbo"));
+        FactHandle productHandle = kenv.knowledgeSession.insert(new Product("Book", 20));
+        FactHandle customerHandle = kenv.knowledgeSession.insert(new Customer("Jimbo"));
 
         TrackingWorkingMemoryEventListener productListener = new TrackingWorkingMemoryEventListener(productHandle);
-        knowledgeEnvironment.knowledgeSession.addEventListener(productListener);
+        kenv.knowledgeSession.addEventListener(productListener);
         TrackingWorkingMemoryEventListener customerListener = new TrackingWorkingMemoryEventListener(customerHandle);
-        knowledgeEnvironment.knowledgeSession.addEventListener(customerListener);
+        kenv.knowledgeSession.addEventListener(customerListener);
 
-        knowledgeEnvironment.knowledgeSession.fireAllRules();
+        kenv.knowledgeSession.fireAllRules();
 
         assertEquals("There should have been 10 updates, as the count was increments from 20 to 10.", 10, productListener.getUpdates().size());
         assertEquals("There should only be one customer update.", 1, customerListener.getUpdates().size());

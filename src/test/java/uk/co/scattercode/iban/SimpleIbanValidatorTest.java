@@ -76,7 +76,7 @@ public class SimpleIbanValidatorTest {
     @Test
     public final void shouldAcceptValidIbans() {
     	for (String iban : validIbans) {
-    		assertTrue(simpleValidator.isValid(iban));
+    		assertTrue(simpleValidator.validate(iban).isValid());
     		assertTrue(mod97Validator.isValid(iban));
     	}
     }
@@ -84,7 +84,7 @@ public class SimpleIbanValidatorTest {
     @Test
     public final void shouldRejectInvalidIbans() {
     	for (String iban : invalidIbans) {
-    		assertFalse(simpleValidator.isValid(iban));
+    		assertFalse(simpleValidator.validate(iban).isValid());
     		assertFalse(mod97Validator.isValid(iban));
     	}
     }

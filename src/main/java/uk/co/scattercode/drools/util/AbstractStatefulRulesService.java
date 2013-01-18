@@ -15,7 +15,7 @@ import uk.co.scattercode.drools.util.KnowledgeEnvironment;
  */
 public abstract class AbstractStatefulRulesService {
 
-	protected KnowledgeEnvironment knowledgeEnvironment 
+	protected KnowledgeEnvironment kenv 
 			= new KnowledgeEnvironment(getResources());
 
 	/**
@@ -35,7 +35,7 @@ public abstract class AbstractStatefulRulesService {
 	 */
 	@Before
 	public void startKnowledgeSession() {
-		knowledgeEnvironment.initialiseSession();
+		kenv.initialiseSession();
 	}
 
 	/**
@@ -53,7 +53,7 @@ public abstract class AbstractStatefulRulesService {
 	 *            A {@link FactHandle} to the object in working memory.
 	 */
 	protected FactHandle insert(Object o) {
-		return knowledgeEnvironment.knowledgeSession.insert(o);
+		return kenv.knowledgeSession.insert(o);
 	}
 
 	/**
@@ -66,7 +66,7 @@ public abstract class AbstractStatefulRulesService {
 	 *            The new/updated object.
 	 */
 	protected void update(FactHandle factHandle, Object o) {
-		knowledgeEnvironment.knowledgeSession.update(factHandle, o);
+		kenv.knowledgeSession.update(factHandle, o);
 	}
     
 	/**
@@ -77,7 +77,7 @@ public abstract class AbstractStatefulRulesService {
 	 *            <code>insert(Object)</code> method.
 	 */
     protected void retract(FactHandle handle) {
-    	knowledgeEnvironment.knowledgeSession.retract(handle);
+    	kenv.knowledgeSession.retract(handle);
     }
     
     /**
@@ -85,7 +85,7 @@ public abstract class AbstractStatefulRulesService {
 	 * insert a number of facts and then call this method to evaluate them.
 	 */
     protected void fireAllRules() {
-    	knowledgeEnvironment.knowledgeSession.fireAllRules();
+    	kenv.knowledgeSession.fireAllRules();
     }
 
 }

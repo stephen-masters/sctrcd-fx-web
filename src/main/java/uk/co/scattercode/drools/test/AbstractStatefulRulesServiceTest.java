@@ -30,7 +30,7 @@ public abstract class AbstractStatefulRulesServiceTest extends AbstractStatefulR
     	for (String ruleName : ruleNames) {
 	        assertTrue("Rule [" + ruleName + "] should have fired.", 
 	                DroolsUtil.ruleFired(
-	                        this.knowledgeEnvironment.agendaEventListener.getActivationList(), 
+	                        this.kenv.agendaEventListener.getActivationList(), 
 	                        ruleName));
     	}
     }
@@ -44,7 +44,7 @@ public abstract class AbstractStatefulRulesServiceTest extends AbstractStatefulR
     	for (String ruleName : ruleNames) {
 	        assertFalse("Rule [" + ruleName + "] should not have fired.", 
 	                DroolsUtil.ruleFired(
-	                        this.knowledgeEnvironment.agendaEventListener.getActivationList(), 
+	                        this.kenv.agendaEventListener.getActivationList(), 
 	                        ruleName));
     	}
     }
@@ -63,14 +63,14 @@ public abstract class AbstractStatefulRulesServiceTest extends AbstractStatefulR
 	 */
     protected void assertFactIsInWorkingMemory(final String factClass, BeanPropertyFilter... expectedProperties) {
     	assertTrue(factFinder.findFact(
-    			this.knowledgeEnvironment.knowledgeSession, 
+    			this.kenv.knowledgeSession, 
     			factClass, 
     			expectedProperties).size() > 0);
     }
     
     protected void assertFactNotInWorkingMemory(final String factClass, BeanPropertyFilter... expectedProperties) {
     	assertTrue(factFinder.findFact(
-    			this.knowledgeEnvironment.knowledgeSession, 
+    			this.kenv.knowledgeSession, 
     			factClass, 
     			expectedProperties).size() == 0);
     }

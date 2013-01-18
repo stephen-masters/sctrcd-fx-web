@@ -1,11 +1,14 @@
 package uk.co.scattercode.iban;
 
 import org.drools.builder.ResourceType;
+import org.drools.runtime.ObjectFilter;
 import org.springframework.stereotype.Service;
 
 import uk.co.scattercode.drools.util.AbstractStatefulRulesService;
 import uk.co.scattercode.drools.util.DroolsResource;
 import uk.co.scattercode.drools.util.ResourcePathType;
+import uk.co.scattercode.iban.facts.IbanValidationAnnotation;
+import uk.co.scattercode.iban.facts.IbanValidationRequest;
 
 @Service("ruleBasedIbanValidator")
 public class RuleBasedIbanValidator 
@@ -23,14 +26,16 @@ public class RuleBasedIbanValidator
     
 	@Override
 	public IbanValidationResult validate(String iban) {
-		// TODO Auto-generated method stub
+		insert(new IbanValidationRequest(iban));
+		fireAllRules();
+		this.kenv.knowledgeSession.getObjects(new ObjectFilter() {
+            @Override
+            public boolean accept(Object fact) {
+                return fact.getClass().getSimpleName()
+                        .equals(IbanValidationAnnotation.class.getSimpleName());
+            }
+        });
 		return null;
-	}
-
-	@Override
-	public boolean isValid(String iban) {
-		// TODO Auto-generated method stub
-		return false;
 	}
 
 }
