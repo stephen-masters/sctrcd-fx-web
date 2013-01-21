@@ -1,5 +1,9 @@
 package uk.co.scattercode.drools.util;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.drools.KnowledgeBase;
 import org.drools.KnowledgeBaseConfiguration;
 import org.drools.KnowledgeBaseFactory;
@@ -12,7 +16,9 @@ import org.drools.definition.rule.Rule;
 import org.drools.event.rule.WorkingMemoryEventListener;
 import org.drools.io.ResourceFactory;
 import org.drools.io.impl.UrlResource;
+import org.drools.runtime.ObjectFilter;
 import org.drools.runtime.StatefulKnowledgeSession;
+import org.drools.runtime.rule.AgendaFilter;
 import org.drools.runtime.rule.FactHandle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +36,8 @@ public class KnowledgeEnvironment {
 
     public DroolsResource[] resources;
 
-    public KnowledgeBase knowledgeBase;
-    public StatefulKnowledgeSession knowledgeSession;
+    public KnowledgeBase kbase;
+    public StatefulKnowledgeSession ksession;
     public TrackingAgendaEventListener agendaEventListener;
     public TrackingWorkingMemoryEventListener workingMemoryEventListener;
 
@@ -56,23 +62,23 @@ public class KnowledgeEnvironment {
     }
 
     /**
-	 * This constructor sets up a user name and password. Handy if you're
-	 * connecting to Guvnor and it's locked down.
-	 * 
-	 * @param url The URL of the package via the Guvnor REST API.
-	 * @param username The Guvnor user name.
-	 * @param password The Guvnor password.
-	 */
+     * This constructor sets up a user name and password. Handy if you're
+     * connecting to Guvnor and it's locked down.
+     * 
+     * @param url The URL of the package via the Guvnor REST API.
+     * @param username The Guvnor user name.
+     * @param password The Guvnor password.
+     */
     public KnowledgeEnvironment(String url, String username, String password) {
         initialise(url, username, password);
     }
 
     /**
-	 * Initialises the knowledge environment by downloading the package from the
-	 * Guvnor REST interface, at the location defined in the URL.
-	 * 
-	 * @param url The URL of the package via the Guvnor REST API.
-	 */
+     * Initialises the knowledge environment by downloading the package from the
+     * Guvnor REST interface, at the location defined in the URL.
+     * 
+     * @param url The URL of the package via the Guvnor REST API.
+     */
     public void initialise(String url) {
         this.resources = new DroolsResource[] { 
             new DroolsResource(url,
@@ -84,11 +90,11 @@ public class KnowledgeEnvironment {
 
     /**
      * Initialises the knowledge environment by downloading the package from the
-	 * Guvnor REST interface, at the location defined in the URL.
-	 * 
+     * Guvnor REST interface, at the location defined in the URL.
+     * 
      * @param url The URL of the package via the Guvnor REST API.
-	 * @param username The Guvnor user name.
-	 * @param password The Guvnor password.
+     * @param username The Guvnor user name.
+     * @param password The Guvnor password.
      */
     public void initialise(String url, String username, String password) {
         this.resources = new DroolsResource[] { 
@@ -102,91 +108,187 @@ public class KnowledgeEnvironment {
     }
 
     /**
-	 * Initialises the knowledge environment with multiple
-	 * {@link DroolsResource} locations.
-	 * 
-	 * @param resources An array of {@link DroolsResource}.
-	 */
+     * Initialises the knowledge environment with multiple
+     * {@link DroolsResource} locations.
+     * 
+     * @param resources An array of {@link DroolsResource}.
+     */
     public void initialise(DroolsResource[] resources) {
         this.resources = resources;
         initialise();
     }
 
     /**
-	 * Initialises the knowledge environment with multiple
-	 * {@link DroolsResource} locations, which should have been defined
-	 * previously in the constructor.
-	 */
+     * Initialises the knowledge environment with multiple
+     * {@link DroolsResource} locations, which should have been defined
+     * previously in the constructor.
+     */
     public void initialise() {
         log.info("Initialising KnowledgeEnvironment with resources: " + this.resources);
-        this.knowledgeBase = createKnowledgeBase(this.resources);
+        this.kbase = createKnowledgeBase(this.resources);
         
         // Log a description of the new knowledge base.
         log.info(toString());
         
         initialiseSession();
     }
-    
+
     /**
-	 * Starts up a new stateless session, and attaches a number of working
-	 * memory listeners.
-	 */
+     * Starts up a new stateless session, and attaches a number of working
+     * memory listeners.
+     */
     public void initialiseSession() {
         log.info("Initialising session...");
-        if (this.knowledgeSession == null) {
-            this.knowledgeSession = knowledgeBase.newStatefulKnowledgeSession();
+        if (this.ksession == null) {
+            this.ksession = kbase.newStatefulKnowledgeSession();
             this.agendaEventListener = new TrackingAgendaEventListener();
-            this.knowledgeSession.addEventListener(this.agendaEventListener);
+            this.ksession.addEventListener(this.agendaEventListener);
             this.workingMemoryEventListener = new TrackingWorkingMemoryEventListener();
-            this.knowledgeSession.addEventListener(this.workingMemoryEventListener);
+            this.ksession.addEventListener(this.workingMemoryEventListener);
         } else {
             retractAll();
             clearListeners();
         }
     }
-    
+
+    public void fireAllRules() {
+        ksession.fireAllRules();
+    }
+
+    public void fireAllRules(AgendaFilter filter) {
+        ksession.fireAllRules(filter);
+    }
+
     /**
-	 * Remove the existing working memory listeners, and set up some fresh ones.
-	 */
+     * Remove the existing working memory listeners, and set up some fresh ones.
+     */
     public void clearListeners() {
-        this.knowledgeSession.removeEventListener(this.agendaEventListener);
-        this.knowledgeSession.removeEventListener(this.workingMemoryEventListener);
+        this.ksession.removeEventListener(this.agendaEventListener);
+        this.ksession.removeEventListener(this.workingMemoryEventListener);
 
         this.agendaEventListener = new TrackingAgendaEventListener();
         this.workingMemoryEventListener = new TrackingWorkingMemoryEventListener();
 
-        this.knowledgeSession.addEventListener(this.agendaEventListener);
-        this.knowledgeSession.addEventListener(this.workingMemoryEventListener);
+        this.ksession.addEventListener(this.agendaEventListener);
+        this.ksession.addEventListener(this.workingMemoryEventListener);
     }
-    
+
+    public List<FactHandle> insert(Object... objects) {
+        List<FactHandle> handles = new ArrayList<FactHandle>();
+        for (Object o : objects) {
+            handles.add(ksession.insert(o));
+        }
+        return handles;
+    }
+
     /**
-     * Retracts all fact handles from working memory.
+     * Retract all fact handles from working memory. This is probably only safe
+     * as a clear-down method for use in tests, so invoke at your own risk.
      */
     public void retractAll() {
         log.info("Retracting all fact handles...");
-        for (FactHandle handle : this.knowledgeSession.getFactHandles()) {
-            this.knowledgeSession.retract(handle);
+        for (FactHandle handle : this.ksession.getFactHandles()) {
+            retract(handle);
         }
     }
-    
+
+    /**
+     * Retract all fact handles from working memory, which match an
+     * {@link ObjectFilter}. For example, to retract all facts of a 
+     * class called "MyObject":
+     * 
+     * <pre>
+     * retractAll(new ObjectFilter() {
+     *     public boolean accept(Object object) {
+     *         return object.getClass().getSimpleName()
+     *                 .equals(MyObject.class.getSimpleName());
+     *     }
+     * });
+     * </pre>
+     * 
+     * @param filter
+     *            The {@link ObjectFilter}.
+     */
+    public void retractAll(ObjectFilter filter) {
+        log.info("Retracting all facts matching filter...");
+        for (FactHandle handle : getFactHandles(filter)) {
+            retract(handle);
+        }
+    }
+
+    /**
+     * The insert method accepts a list of arguments and returns a list of fact
+     * handles. Therefore this is retract method which can accept such a list.
+     * 
+     * @param handles
+     *            The fact handles you wish to retract.
+     */
+    public void retract(List<FactHandle> handles) {
+        for (FactHandle handle : handles) {
+            retract(handle);
+        }
+    }
+
+    public void retract(FactHandle handle) {
+        ksession.retract(handle);
+    }
+
+
+    public Object getObject(FactHandle handle) {
+        if (handle == null) {
+            return null;
+        } else {
+            return ksession.getObject(handle);
+        }
+    }
+
+    public Collection<Object> getObjects(ObjectFilter filter) {
+        return ksession.getObjects(filter);
+    }
+
+    /**
+     * Retract all facts from working memory matching an {@link ObjectFilter}.
+     * For example, to find all facts of a class called "MyObject":
+     * 
+     * <pre>
+     * getFactHandles(new ObjectFilter() {
+     *     public boolean accept(Object object) {
+     *         return object.getClass().getSimpleName()
+     *                 .equals(MyObject.class.getSimpleName());
+     *     }
+     * });
+     * </pre>
+     * 
+     * @param filter
+     *            The {@link ObjectFilter}.
+     * @return A collection of facts matching the filter.
+     */
+    public Collection<FactHandle> getFactHandles(ObjectFilter filter) {
+        return ksession.getFactHandles(filter);
+    }
+
+    public List<Activation> findActivations() {
+        return agendaEventListener.getActivationList();
+    }
+
     /**
      * Attaches a {@link WorkingMemoryEventListener} to the session.
      * 
      * @param listener The listener to be attached.
      */
     public void addEventListener(WorkingMemoryEventListener listener) {
-        knowledgeSession.addEventListener(listener);
+        ksession.addEventListener(listener);
     }
-    
+
     /**
      * Disconnects a {@link WorkingMemoryEventListener} from the session.
      * 
      * @param listener The listener to be disconnected.
      */
     public void removeEventListener(WorkingMemoryEventListener listener) {
-        knowledgeSession.removeEventListener(listener);
+        ksession.removeEventListener(listener);
     }
-    
+
     /**
      * Creates a new knowledge base using a collection of resources.
      * 
@@ -252,7 +354,7 @@ public class KnowledgeEnvironment {
      */
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (KnowledgePackage p : knowledgeBase.getKnowledgePackages()) {
+        for (KnowledgePackage p : kbase.getKnowledgePackages()) {
             sb.append("\n  Package : " + p.getName());
             for (Rule r : p.getRules()) {
                 sb.append("\n    Rule: " + r.getName());
@@ -260,7 +362,7 @@ public class KnowledgeEnvironment {
         }
         return "Knowledge base built with packages: " + sb.toString();
     }
-    
+
     /**
      * Iterates through the facts currently in working memory, and logs their details.
      * 

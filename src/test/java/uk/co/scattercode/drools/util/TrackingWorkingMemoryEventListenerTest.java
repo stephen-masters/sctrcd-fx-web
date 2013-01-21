@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import uk.co.scattercode.drools.test.AbstractStatefulRulesServiceTest;
 import uk.co.scattercode.drools.util.TrackingWorkingMemoryEventListener;
 import uk.co.scattercode.drools.util.testfacts.Product;
 import uk.co.scattercode.drools.util.testfacts.Customer;
@@ -29,22 +28,20 @@ import uk.co.scattercode.drools.util.testfacts.Customer;
  * 
  * @author Stephen Masters
  */
-public class TrackingWorkingMemoryEventListenerTest extends AbstractStatefulRulesServiceTest {
+public class TrackingWorkingMemoryEventListenerTest {
 
     private static Logger log = LoggerFactory.getLogger(TrackingWorkingMemoryEventListenerTest.class);
 
-    @Override
-    protected DroolsResource[] getResources() {
-        return new DroolsResource[] { 
-        		new DroolsResource("sctrcd/drools/util/TrackingWorkingMemoryEventListenerTest.drl", 
-                        ResourcePathType.CLASSPATH, 
-                        ResourceType.DRL)
-        };
-    }
-    
+    KnowledgeEnvironment kenv = new KnowledgeEnvironment(
+        new DroolsResource[] { 
+            new DroolsResource("sctrcd/drools/util/TrackingWorkingMemoryEventListenerTest.drl",
+                    ResourcePathType.CLASSPATH, 
+                    ResourceType.DRL)
+        });
+
     @Mock private ObjectInsertedEvent objectInsertedEvent;
     @Mock private KnowledgeRuntime knowledgeRuntime;
-    
+
     @Before
     public void setUp() {
         initMocks(this);
@@ -52,7 +49,7 @@ public class TrackingWorkingMemoryEventListenerTest extends AbstractStatefulRule
         when(this.objectInsertedEvent.getKnowledgeRuntime()).thenReturn(this.knowledgeRuntime);
         when(this.objectInsertedEvent.getObject()).thenReturn(new String("Mock object."));
     }
-    
+
     @Test
     public void shouldTrackEvents() {
         TrackingWorkingMemoryEventListener listener = new TrackingWorkingMemoryEventListener();
@@ -71,25 +68,25 @@ public class TrackingWorkingMemoryEventListenerTest extends AbstractStatefulRule
         assertEquals(retractionCountBeforeInsertion, retractionCountAfterInsertion);
         assertEquals(updateCountBeforeInsertion, updateCountAfterInsertion);
     }
-    
+
     @Test
     public void shouldTrackFilteredUpdates() {
     
         TrackingAgendaEventListener agendaListener = new TrackingAgendaEventListener();
         TrackingWorkingMemoryEventListener workingMemoryListener = new TrackingWorkingMemoryEventListener();
         
-        kenv.knowledgeSession.addEventListener(agendaListener);
-        kenv.knowledgeSession.addEventListener(workingMemoryListener);
+        kenv.ksession.addEventListener(agendaListener);
+        kenv.ksession.addEventListener(workingMemoryListener);
         
-        FactHandle productHandle = kenv.knowledgeSession.insert(new Product("Book", 20));
-        FactHandle customerHandle = kenv.knowledgeSession.insert(new Customer("Jimbo"));
+        FactHandle productHandle = kenv.ksession.insert(new Product("Book", 20));
+        FactHandle customerHandle = kenv.ksession.insert(new Customer("Jimbo"));
 
         TrackingWorkingMemoryEventListener productListener = new TrackingWorkingMemoryEventListener(productHandle);
-        kenv.knowledgeSession.addEventListener(productListener);
+        kenv.ksession.addEventListener(productListener);
         TrackingWorkingMemoryEventListener customerListener = new TrackingWorkingMemoryEventListener(customerHandle);
-        kenv.knowledgeSession.addEventListener(customerListener);
+        kenv.ksession.addEventListener(customerListener);
 
-        kenv.knowledgeSession.fireAllRules();
+        kenv.ksession.fireAllRules();
 
         assertEquals("There should have been 10 updates, as the count was increments from 20 to 10.", 10, productListener.getUpdates().size());
         assertEquals("There should only be one customer update.", 1, customerListener.getUpdates().size());
