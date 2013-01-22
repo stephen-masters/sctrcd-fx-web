@@ -9,6 +9,8 @@ public class Country {
     }
 
     public Country(String isoCode, String name) {
+        this.isoCode = isoCode;
+        this.name = name;
     }
 
     public String getIsoCode() {
@@ -25,6 +27,10 @@ public class Country {
 
     public void setName(String name) {
         this.name = name;
+    }
+    
+    public String toString() {
+        return isoCode + "=" + name;
     }
 
 }

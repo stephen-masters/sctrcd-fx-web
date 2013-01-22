@@ -5,14 +5,11 @@ import uk.co.scattercode.iban.facts.*
 global java.util.List countryList;
 
 rule "Must begin with a country ISO code."
+    no-loop
 when
     $req: IbanValidationRequest($iban:iban, $country:iban.substring(0, 2))
-    not Country(isoCode == $country)
+    not Country(isoCode == $country) from countryList
 then
-    // Create a rejection annotation.
-    $req.addAnnotation(new IbanValidationAnnotation(
-           $iban, 
-           false, 
-           "An IBAN must begin with a 2-character country code."));
+    $req.reject("An IBAN must begin with a 2-character country code. '" + $country + "' is not a country.");
     update($req);
 end

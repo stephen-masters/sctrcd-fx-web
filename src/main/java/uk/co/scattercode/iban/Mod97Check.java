@@ -31,19 +31,19 @@ import java.math.BigInteger;
  * 
  * @author Stephen Masters
  */
-public class Mod97IbanValidator {
+public class Mod97Check {
 	
 	/**
-	 * Default constructor.
+	 * Default constructor is private to prevent instantiation.
 	 */
-	public Mod97IbanValidator() {
+	private Mod97Check() {
 	}
 
     /**
 	 * Performs the ISO mod-97 check based on the assumption that the IBAN arg
 	 * has extraneous characters removed and all letters are upper-case.
 	 */
-    boolean isValid(String iban) {
+    public static boolean isValid(String iban) {
 		if (iban == null)
 			return false;
         // If the checksum divided by 97 leaves a remainder of 1,
@@ -73,7 +73,7 @@ public class Mod97IbanValidator {
 	 *   123C5 => 123125
 	 * </pre>
 	 */
-    BigInteger numerize(String iban) {
+    public static BigInteger numerize(String iban) {
         StringBuilder sb = new StringBuilder();
         for (char c : iban.toCharArray()) {
         	sb.append(Character.getNumericValue(c));
@@ -87,7 +87,7 @@ public class Mod97IbanValidator {
      *   KY12 0123 4567 8901 2345 => 0123 4567 8901 2345 KY12
      * </pre>
      */
-    String shuffle(String iban) {
+    public static String shuffle(String iban) {
     	String shuffledIban = (iban + iban.substring(0, 4));
     	shuffledIban = shuffledIban.substring(4, shuffledIban.length());
     	return shuffledIban;

@@ -11,14 +11,17 @@ public class IbanValidationResult {
     private String originalForm;
     private String electronicForm;
     private String displayForm;
-    private boolean isValid;
+    private boolean isValid = true;
     private List<IbanValidationAnnotation> annotations = new ArrayList<IbanValidationAnnotation>();
 
-    public IbanValidationResult(String originalForm, boolean isValid,
-            String electronicForm, String displayForm) {
-        this.originalForm = originalForm;
-        this.electronicForm = electronicForm;
-        this.displayForm = displayForm;
+    public IbanValidationResult(String iban) {
+        this.originalForm = iban;
+        this.electronicForm = IbanUtil.sanitize(iban);
+        this.displayForm = IbanFormatter.printFormat(iban);
+    }
+            
+    public IbanValidationResult(String iban, boolean isValid) {
+        this(iban);
         this.isValid = isValid;
     }
 

@@ -15,7 +15,7 @@ import uk.co.scattercode.drools.util.ResourcePathType;
 import uk.co.scattercode.drools.util.TrackingAgendaEventListener;
 import uk.co.scattercode.drools.util.TrackingWorkingMemoryEventListener;
 import uk.co.scattercode.iban.enums.CountryEnum;
-import uk.co.scattercode.iban.facts.IbanValidationAnnotation;
+import uk.co.scattercode.iban.facts.Country;
 import uk.co.scattercode.iban.facts.IbanValidationRequest;
 
 @Service("ruleBasedIbanValidator")
@@ -23,9 +23,7 @@ public class RuleBasedIbanValidator implements IbanValidator {
 
     private KnowledgeBase kbase;
     
-    public final List<String> isoCodes = new ArrayList<String>();
-    
-    private SimpleIbanValidator simpleValidator = new SimpleIbanValidator();
+    public final List<Country> countries = new ArrayList<Country>();
     
     public RuleBasedIbanValidator() {
         this.kbase = DroolsUtil.createKnowledgeBase(
@@ -36,22 +34,24 @@ public class RuleBasedIbanValidator implements IbanValidator {
                 }, 
                 EventProcessingOption.CLOUD);
         for (CountryEnum c : CountryEnum.values()) {
-            isoCodes.add(c.isoCode);
+            countries.add(new Country(c.isoCode, c.name));
         }
     }
     
 	@Override
 	public IbanValidationResult validate(String iban) {
-	    IbanValidationResult ivResult = simpleValidator.validate(iban);
+	    IbanValidationResult result = new IbanValidationResult(iban);
 	    
-	    if (!ivResult.isValid()) {
-            // The request is not valid at the most basic level, so there's no
+	    // Perform an initial mod-97 check.
+	    if (!Mod97Check.isValid(IbanUtil.sanitize(iban))) {
+	        // The request is not valid at the most basic level, so there's no
             // point in proceeding with running it through the rules engine.
-	        return ivResult;
+	        result.setValid(false);
+	        return result;
 	    }
 	    
 	    StatelessKnowledgeSession ksession = kbase.newStatelessKnowledgeSession();
-	    ksession.setGlobal("countrylist", isoCodes);
+	    ksession.setGlobal("countryList", countries);
 	    
 	    TrackingAgendaEventListener agendaEventListener = 
 	            new TrackingAgendaEventListener();
@@ -67,11 +67,7 @@ public class RuleBasedIbanValidator implements IbanValidator {
 	    
 		ksession.execute(facts);
 		
-		for (IbanValidationAnnotation annotation : req.getAnnotations()) {
-		    ivResult.addAnnotation(annotation);
-		}
-		
-		return ivResult;
+		return result;
 	}    
 
 }

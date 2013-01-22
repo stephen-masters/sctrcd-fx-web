@@ -3,7 +3,7 @@ package uk.co.scattercode.iban;
 import org.junit.Test;
 
 import uk.co.scattercode.iban.IbanValidator;
-import uk.co.scattercode.iban.Mod97IbanValidator;
+import uk.co.scattercode.iban.Mod97Check;
 import uk.co.scattercode.iban.SimpleIbanValidator;
 import static org.junit.Assert.*;
 
@@ -70,13 +70,12 @@ public class SimpleIbanValidatorTest {
         "TN59 1421 7207 1007 0712 9648"
 	};
 	
-	Mod97IbanValidator mod97Validator = new Mod97IbanValidator();
 	SimpleIbanValidator simpleValidator = new SimpleIbanValidator();
 	
     @Test
     public final void shouldAcceptValidIbans() {
     	for (String iban : validIbans) {
-            assertTrue(mod97Validator.isValid(iban));
+            assertTrue(Mod97Check.isValid(iban));
     		assertTrue(simpleValidator.validate(iban).isValid());
     	}
     }
@@ -84,7 +83,7 @@ public class SimpleIbanValidatorTest {
     @Test
     public final void shouldRejectInvalidIbans() {
     	for (String iban : invalidIbans) {
-            assertFalse(mod97Validator.isValid(iban));
+            assertFalse(Mod97Check.isValid(iban));
     	    assertFalse(simpleValidator.validate(iban).isValid());
     	}
     }

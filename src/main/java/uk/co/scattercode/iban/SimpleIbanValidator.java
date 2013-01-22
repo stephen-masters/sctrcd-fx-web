@@ -23,8 +23,6 @@ public class SimpleIbanValidator implements IbanValidator {
      */
     private final Map<String, CountryEnum> countryMap;
 
-    private static final Mod97IbanValidator MOD_97 = new Mod97IbanValidator();
-
     /**
      * Default constructor sets up the permitted countries based on all those
      * defined in the {@link CountryEnum} enum.
@@ -37,8 +35,7 @@ public class SimpleIbanValidator implements IbanValidator {
     }
 
     public IbanValidationResult validate(String iban) {
-        return new IbanValidationResult(iban, isValid(iban),
-                IbanUtil.sanitize(iban), IbanFormatter.printFormat(iban));
+        return new IbanValidationResult(iban, isValid(iban));
     }
 
     /**
@@ -57,7 +54,7 @@ public class SimpleIbanValidator implements IbanValidator {
         }
         // If the checksum divided by 97 leaves a remainder of 1,
         // the IBAN is valid.
-        return MOD_97.isValid(IbanUtil.sanitize(iban));
+        return Mod97Check.isValid(IbanUtil.sanitize(iban));
     }
 
 }

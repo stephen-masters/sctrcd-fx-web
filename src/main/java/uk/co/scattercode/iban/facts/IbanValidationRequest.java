@@ -32,5 +32,9 @@ public class IbanValidationRequest {
     public void addAnnotation(IbanValidationAnnotation annotation) {
         annotations.add(annotation);
     }
+    
+    public void reject(String message) {
+        annotations.add(new IbanValidationAnnotation(false, message));
+    }
 
 }
