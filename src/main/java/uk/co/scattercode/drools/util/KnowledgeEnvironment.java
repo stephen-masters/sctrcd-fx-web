@@ -1,5 +1,9 @@
 package uk.co.scattercode.drools.util;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.drools.KnowledgeBase;
 import org.drools.KnowledgeBaseConfiguration;
 import org.drools.KnowledgeBaseFactory;
@@ -9,9 +13,11 @@ import org.drools.builder.ResourceType;
 import org.drools.conf.EventProcessingOption;
 import org.drools.definition.KnowledgePackage;
 import org.drools.definition.rule.Rule;
+import org.drools.event.rule.AgendaEventListener;
 import org.drools.event.rule.WorkingMemoryEventListener;
 import org.drools.io.ResourceFactory;
 import org.drools.io.impl.UrlResource;
+import org.drools.runtime.ObjectFilter;
 import org.drools.runtime.StatefulKnowledgeSession;
 import org.drools.runtime.rule.FactHandle;
 import org.slf4j.Logger;
@@ -28,12 +34,12 @@ public class KnowledgeEnvironment {
 
     private static Logger log = LoggerFactory.getLogger(KnowledgeEnvironment.class);
 
-    public DroolsResource[] resources;
+    private DroolsResource[] resources;
 
-    public KnowledgeBase knowledgeBase;
-    public StatefulKnowledgeSession knowledgeSession;
-    public TrackingAgendaEventListener agendaEventListener;
-    public TrackingWorkingMemoryEventListener workingMemoryEventListener;
+    private KnowledgeBase knowledgeBase;
+    private StatefulKnowledgeSession knowledgeSession;
+    private TrackingAgendaEventListener agendaEventListener;
+    private TrackingWorkingMemoryEventListener workingMemoryEventListener;
 
     /**
      * Constructor supporting setting up a knowledge environment using just a
@@ -119,7 +125,9 @@ public class KnowledgeEnvironment {
 	 */
     public void initialise() {
         log.info("Initialising KnowledgeEnvironment with resources: " + this.resources);
-        this.knowledgeBase = createKnowledgeBase(this.resources);
+        this.knowledgeBase = DroolsUtil.createKnowledgeBase(
+                this.resources, 
+                EventProcessingOption.STREAM);
         
         // Log a description of the new knowledge base.
         log.info(toString());
@@ -159,14 +167,63 @@ public class KnowledgeEnvironment {
         this.knowledgeSession.addEventListener(this.workingMemoryEventListener);
     }
     
+    public FactHandle insert(Object o) {
+        return this.knowledgeSession.insert(o);
+    }
+    
+    public List<FactHandle> insert(Collection<Object> facts) {
+        List<FactHandle> handles = new ArrayList<FactHandle>();
+        for (Object fact : facts) {
+            handles.add(this.knowledgeSession.insert(fact));
+        }
+        return handles;
+    }
+    
     /**
      * Retracts all fact handles from working memory.
      */
     public void retractAll() {
-        log.info("Retracting all fact handles...");
-        for (FactHandle handle : this.knowledgeSession.getFactHandles()) {
-            this.knowledgeSession.retract(handle);
+        retractAll(this.knowledgeSession.getFactHandles());
+    }
+    
+    public void retractAll(ObjectFilter filter) {
+        retractAll(this.knowledgeSession.getFactHandles(filter));
+    }
+    
+    public void retractAll(Collection<FactHandle> handles) {
+        for (FactHandle handle : handles) {
+            retract(handle);
         }
+    }
+    
+    public void retract(FactHandle handle) {
+        this.knowledgeSession.retract(handle);
+    }
+    
+    public void update(FactHandle handle, Object o) {
+        this.knowledgeSession.update(handle, o);
+    }
+    
+    public void fireAllRules() {
+        this.knowledgeSession.fireAllRules();
+    }
+
+    /**
+     * Attaches an {@link AgendaEventListener} to the session.
+     * 
+     * @param listener The listener to be attached.
+     */
+    public void addEventListener(AgendaEventListener listener) {
+        knowledgeSession.addEventListener(listener);
+    }
+    
+    /**
+     * Disconnects an {@link AgendaEventListener} from the session.
+     * 
+     * @param listener The listener to be disconnected.
+     */
+    public void removeEventListener(AgendaEventListener listener) {
+        knowledgeSession.removeEventListener(listener);
     }
     
     /**
@@ -187,63 +244,8 @@ public class KnowledgeEnvironment {
         knowledgeSession.removeEventListener(listener);
     }
     
-    /**
-     * Creates a new knowledge base using a collection of resources.
-     * 
-     * @param resources
-     *            An array of {@link DroolsResource} indicating where the
-     *            various resources should be loaded from. These could be
-     *            classpath, file or URL resources.
-     * @return A new knowledge base.
-     */
-    public KnowledgeBase createKnowledgeBase(DroolsResource[] resources) {
-        KnowledgeBuilder builder = KnowledgeBuilderFactory
-                .newKnowledgeBuilder();
-
-        for (DroolsResource resource : resources) {
-            log.info("Resource: " + resource.getType() + ", path type="
-                    + resource.getPathType() + ", path=" + resource.getPath());
-            switch (resource.getPathType()) {
-            case CLASSPATH:
-                builder.add(ResourceFactory.newClassPathResource(resource
-                        .getPath()), resource.getType());
-                break;
-            case FILE:
-                builder.add(
-                        ResourceFactory.newFileResource(resource.getPath()),
-                        resource.getType());
-                break;
-            case URL:
-                UrlResource urlResource = (UrlResource) ResourceFactory
-                        .newUrlResource(resource.getPath());
-                
-                if (resource.getUsername() != null) {
-                    log.info("Setting authentication for: " + resource.getUsername());
-                    urlResource.setBasicAuthentication("enabled");
-                    urlResource.setUsername(resource.getUsername());
-                    urlResource.setPassword(resource.getPassword());
-                }
-                
-                builder.add(urlResource, resource.getType());
-                
-                break;
-            default:
-                throw new IllegalArgumentException(
-                        "Unable to build this resource path type.");
-            }
-        }
-
-        if (builder.hasErrors()) {
-            throw new RuntimeException(builder.getErrors().toString());
-        }
-
-        KnowledgeBaseConfiguration conf = KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
-        conf.setOption(EventProcessingOption.STREAM);
-
-        KnowledgeBase knowledgeBase = KnowledgeBaseFactory.newKnowledgeBase(conf);
-        knowledgeBase.addKnowledgePackages(builder.getKnowledgePackages());
-
-        return knowledgeBase;
+    public List<Activation> getActivationList() {
+        return this.agendaEventListener.getActivationList();
     }
 
     /**
@@ -275,6 +277,48 @@ public class KnowledgeEnvironment {
         }
         sb.append("\n************************************************************\n");
         log.info(sb.toString());
+    }
+
+    public DroolsResource[] getResources() {
+        return resources;
+    }
+
+    public void setResources(DroolsResource[] resources) {
+        this.resources = resources;
+    }
+
+    public KnowledgeBase getKnowledgeBase() {
+        return knowledgeBase;
+    }
+
+    public void setKnowledgeBase(KnowledgeBase knowledgeBase) {
+        this.knowledgeBase = knowledgeBase;
+    }
+
+    public StatefulKnowledgeSession getKnowledgeSession() {
+        return knowledgeSession;
+    }
+
+    public void setKnowledgeSession(StatefulKnowledgeSession knowledgeSession) {
+        this.knowledgeSession = knowledgeSession;
+    }
+
+    public TrackingAgendaEventListener getAgendaEventListener() {
+        return agendaEventListener;
+    }
+
+    public void setAgendaEventListener(
+            TrackingAgendaEventListener agendaEventListener) {
+        this.agendaEventListener = agendaEventListener;
+    }
+
+    public TrackingWorkingMemoryEventListener getWorkingMemoryEventListener() {
+        return workingMemoryEventListener;
+    }
+
+    public void setWorkingMemoryEventListener(
+            TrackingWorkingMemoryEventListener workingMemoryEventListener) {
+        this.workingMemoryEventListener = workingMemoryEventListener;
     }
 
 }

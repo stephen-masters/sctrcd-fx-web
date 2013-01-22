@@ -13,24 +13,47 @@ import uk.co.scattercode.beans.BeanPropertyFilter;
 
 public class FactFinder {
 
-	BeanMatcher beanMatcher  = new BeanMatcher();
-	
+    BeanMatcher beanMatcher = new BeanMatcher();
+
     /**
-	 * A more complex assertion that a fact of the expected class with specified
-	 * properties is in working memory.
-	 * 
-	 * @param factName
-	 *            The simple name of the class of the fact we're looking for.
-	 * @param expectedProperties
-	 *            A sequence of expected property name/value pairs.
-	 * @throws IllegalAccessException
-	 * @throws InvocationTargetException
-	 * @throws NoSuchMethodException
-	 */
-    public Collection<Object> findFact(
-    		final StatefulKnowledgeSession session, 
-    		final String factClass, 
-    		final BeanPropertyFilter... expectedProperties) {
+     * An assertion that a fact of the expected class with specified properties
+     * is in working memory.
+     * 
+     * @param kenv
+     *            A {@link KnowledgeEnvironment} containing a
+     *            {@link KnowledgeSession} in which we are looking for the fact.
+     * @param factClass
+     *            The simple name of the class of the fact we're looking for.
+     * @param expectedProperties
+     *            A sequence of expected property name/value pairs.
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     * @throws NoSuchMethodException
+     */
+    public Collection<Object> findFacts(final KnowledgeEnvironment kenv,
+            final String factClass,
+            final BeanPropertyFilter... expectedProperties) {
+        return findFacts(kenv.getKnowledgeSession(), factClass, expectedProperties);
+    }
+
+    /**
+     * An assertion that a fact of the expected class with specified properties
+     * is in working memory.
+     * 
+     * @param session
+     *            A {@link KnowledgeSession} in which we are looking for the
+     *            fact.
+     * @param factClass
+     *            The simple name of the class of the fact we're looking for.
+     * @param expectedProperties
+     *            A sequence of expected property name/value pairs.
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     * @throws NoSuchMethodException
+     */
+    public Collection<Object> findFacts(final StatefulKnowledgeSession session,
+            final String factClass,
+            final BeanPropertyFilter... expectedProperties) {
 
         ObjectFilter filter = new ObjectFilter() {
             @Override
@@ -49,5 +72,5 @@ public class FactFinder {
         }
         return facts;
     }
-	
+
 }

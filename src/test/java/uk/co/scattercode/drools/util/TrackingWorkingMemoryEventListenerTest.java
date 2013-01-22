@@ -16,11 +16,9 @@ import org.slf4j.LoggerFactory;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import uk.co.scattercode.drools.test.AbstractStatefulRulesServiceTest;
 import uk.co.scattercode.drools.util.TrackingWorkingMemoryEventListener;
 import uk.co.scattercode.drools.util.testfacts.Product;
 import uk.co.scattercode.drools.util.testfacts.Customer;
-
 
 /**
  * A very simple test to confirm that the
@@ -29,18 +27,15 @@ import uk.co.scattercode.drools.util.testfacts.Customer;
  * 
  * @author Stephen Masters
  */
-public class TrackingWorkingMemoryEventListenerTest extends AbstractStatefulRulesServiceTest {
+public class TrackingWorkingMemoryEventListenerTest {
 
     private static Logger log = LoggerFactory.getLogger(TrackingWorkingMemoryEventListenerTest.class);
 
-    @Override
-    protected DroolsResource[] getResources() {
-        return new DroolsResource[] { 
-        		new DroolsResource("sctrcd/drools/util/TrackingWorkingMemoryEventListenerTest.drl", 
-                        ResourcePathType.CLASSPATH, 
-                        ResourceType.DRL)
-        };
-    }
+    private KnowledgeEnvironment kenv = new KnowledgeEnvironment(new DroolsResource[] { 
+		new DroolsResource("sctrcd/drools/util/TrackingWorkingMemoryEventListenerTest.drl", 
+                ResourcePathType.CLASSPATH, 
+                ResourceType.DRL)
+        });
     
     @Mock private ObjectInsertedEvent objectInsertedEvent;
     @Mock private KnowledgeRuntime knowledgeRuntime;
@@ -78,21 +73,47 @@ public class TrackingWorkingMemoryEventListenerTest extends AbstractStatefulRule
         TrackingAgendaEventListener agendaListener = new TrackingAgendaEventListener();
         TrackingWorkingMemoryEventListener workingMemoryListener = new TrackingWorkingMemoryEventListener();
         
-        kenv.knowledgeSession.addEventListener(agendaListener);
-        kenv.knowledgeSession.addEventListener(workingMemoryListener);
+        kenv.addEventListener(agendaListener);
+        kenv.addEventListener(workingMemoryListener);
         
-        FactHandle productHandle = kenv.knowledgeSession.insert(new Product("Book", 20));
-        FactHandle customerHandle = kenv.knowledgeSession.insert(new Customer("Jimbo"));
+        FactHandle productHandle = kenv.insert(new Product("Book", 20));
+        FactHandle customerHandle = kenv.insert(new Customer("Jimbo"));
 
         TrackingWorkingMemoryEventListener productListener = new TrackingWorkingMemoryEventListener(productHandle);
-        kenv.knowledgeSession.addEventListener(productListener);
+        kenv.addEventListener(productListener);
         TrackingWorkingMemoryEventListener customerListener = new TrackingWorkingMemoryEventListener(customerHandle);
-        kenv.knowledgeSession.addEventListener(customerListener);
+        kenv.addEventListener(customerListener);
 
-        kenv.knowledgeSession.fireAllRules();
+        kenv.fireAllRules();
 
         assertEquals("There should have been 10 updates, as the count was increments from 20 to 10.", 10, productListener.getUpdates().size());
         assertEquals("There should only be one customer update.", 1, customerListener.getUpdates().size());
+
+        // Print the product updates...
+        StringBuilder sb = new StringBuilder("The following changes to product were tracked:\n");
+        for (Map<String, Object> objectProperties : productListener.getFactChanges()) {
+            for (String k : objectProperties.keySet()) {
+                sb.append(k + "=\"" + objectProperties.get(k) + "\" ");
+            }
+            sb.append("\n");
+        }
+        log.info(sb.toString());
+    }
+    
+    @Test
+    public void shouldTrackClassFilteredUpdates() {
+        TrackingWorkingMemoryEventListener everythingListener = new TrackingWorkingMemoryEventListener();
+        TrackingWorkingMemoryEventListener productListener = new TrackingWorkingMemoryEventListener(Product.class);
+        kenv.addEventListener(everythingListener);
+        kenv.addEventListener(productListener);
+
+        kenv.insert(new Product("Book", 20));
+        kenv.insert(new Customer("Jimbo"));
+
+        kenv.fireAllRules();
+
+        assertEquals("There should be 11 updates in total.", 11, everythingListener.getUpdates().size());
+        assertEquals("There should have been 10 updates, as the count was increments from 20 to 10.", 10, productListener.getUpdates().size());
 
         // Print the product updates...
         StringBuilder sb = new StringBuilder("The following changes to product were tracked:\n");

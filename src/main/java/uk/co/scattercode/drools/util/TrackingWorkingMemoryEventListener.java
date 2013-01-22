@@ -38,6 +38,7 @@ public class TrackingWorkingMemoryEventListener extends
     private List<Map<String, Object>> factChanges = new ArrayList<Map<String,Object>>();
 
     private FactHandle handleFilter;
+    private Class<?> classFilter;
 
     /**
      * Void constructor sets the listener to record all working memory events
@@ -45,6 +46,10 @@ public class TrackingWorkingMemoryEventListener extends
      */
     public TrackingWorkingMemoryEventListener() {
         this.handleFilter = null;
+    }
+    
+    public TrackingWorkingMemoryEventListener(Class<?> classFilter) {
+        this.classFilter = classFilter;
     }
     
     /**
@@ -60,7 +65,9 @@ public class TrackingWorkingMemoryEventListener extends
     
     @Override
     public void objectInserted(final ObjectInsertedEvent event) {
-        if (handleFilter == null || event.getFactHandle() == handleFilter) {
+        if ((handleFilter == null  && classFilter == null)
+                || event.getFactHandle() == handleFilter
+                || event.getObject().getClass().equals(classFilter)) {
             insertions.add(event);
             allEvents.add(event);
             log.debug("Insertion: " + DroolsUtil.objectDetails(event.getObject()));
@@ -69,7 +76,9 @@ public class TrackingWorkingMemoryEventListener extends
 
     @Override
     public void objectRetracted(final ObjectRetractedEvent event) {
-        if (handleFilter == null || event.getFactHandle() == handleFilter) {
+        if ((handleFilter == null  && classFilter == null) 
+                || event.getFactHandle() == handleFilter
+                || event.getOldObject().getClass().equals(classFilter)) {
             retractions.add(event);
             allEvents.add(event);
             log.debug("Retraction: " + DroolsUtil.objectDetails(event.getOldObject()));
@@ -79,7 +88,9 @@ public class TrackingWorkingMemoryEventListener extends
     @SuppressWarnings("unchecked")
     @Override
     public void objectUpdated(final ObjectUpdatedEvent event) {
-        if (handleFilter == null || event.getFactHandle() == handleFilter) {
+        if ((handleFilter == null  && classFilter == null) 
+                || event.getFactHandle() == handleFilter
+                || event.getObject().getClass().equals(classFilter)) {
             updates.add(event);
             allEvents.add(event);
 

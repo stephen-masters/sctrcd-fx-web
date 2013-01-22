@@ -32,6 +32,11 @@ public class DroolsUtil {
     
     private static BeanMatcher matcher = new BeanMatcher();
 
+    public static KnowledgeBase createKnowledgeBase(
+            DroolsResource[] resources) {
+        return createKnowledgeBase(resources, EventProcessingOption.STREAM);
+    }
+    
     /**
      * Creates a new knowledge base using a collection of resources.
      * 
@@ -41,7 +46,9 @@ public class DroolsUtil {
      *            classpath, file or URL resources.
      * @return A new knowledge base.
      */
-    public static KnowledgeBase createKnowledgeBase(DroolsResource[] resources) {
+    public static KnowledgeBase createKnowledgeBase(
+            DroolsResource[] resources,
+            EventProcessingOption eventProcessingOption) {
         KnowledgeBuilder builder = KnowledgeBuilderFactory
                 .newKnowledgeBuilder();
 
@@ -85,7 +92,7 @@ public class DroolsUtil {
 
         KnowledgeBaseConfiguration conf = KnowledgeBaseFactory
                 .newKnowledgeBaseConfiguration();
-        conf.setOption(EventProcessingOption.STREAM);
+        conf.setOption(eventProcessingOption);
 
         KnowledgeBase knowledgeBase = KnowledgeBaseFactory
                 .newKnowledgeBase(conf);
@@ -106,7 +113,7 @@ public class DroolsUtil {
 
         return knowledgeBase;
     }
-
+    
     /**
      * Return a string containing the packages used to build the knowledge base.
      */

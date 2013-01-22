@@ -1,2 +1,17 @@
 package uk.co.scattercode.fx;
 
+import uk.co.scattercode.iban.facts.*
+
+global java.util.List countryList;
+
+rule "Must begin with a country ISO code."
+when
+    $req: IbanValidationRequest($iban:iban, $country:iban.substring(0, 2))
+    not exists Country(isoCode == $country)
+then
+    // Create a rejection annotation.
+    insert(new IbanValidationAnnotation(
+           $iban, 
+           false, 
+           "An IBAN must begin with a 2-character country code."))
+end
