@@ -14,7 +14,7 @@ import static org.junit.Assert.*;
  */
 public class SimpleIbanValidatorTest {
 
-	String[] validIbans = {
+	public static final String[] validIbans = {
        	"BG29FINV915010EUR0IKFF",
         "ES5702170302862100282783",
         "SK3211000000002612890189",
@@ -57,7 +57,7 @@ public class SimpleIbanValidatorTest {
         "TN59 1420 7207 1007 0712 9648"
 	};
 	
-	String[] invalidIbans = {
+	public static final String[] invalidIbans = {
         "IT72C012574030100000000789",
         "ES050 217009945",
         "ES150 217002616",

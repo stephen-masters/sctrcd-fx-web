@@ -36,10 +36,10 @@ public class TrackingWorkingMemoryEventListenerTest {
                 ResourcePathType.CLASSPATH, 
                 ResourceType.DRL)
         });
-    
+
     @Mock private ObjectInsertedEvent objectInsertedEvent;
     @Mock private KnowledgeRuntime knowledgeRuntime;
-    
+
     @Before
     public void setUp() {
         initMocks(this);
@@ -47,7 +47,7 @@ public class TrackingWorkingMemoryEventListenerTest {
         when(this.objectInsertedEvent.getKnowledgeRuntime()).thenReturn(this.knowledgeRuntime);
         when(this.objectInsertedEvent.getObject()).thenReturn(new String("Mock object."));
     }
-    
+
     @Test
     public void shouldTrackEvents() {
         TrackingWorkingMemoryEventListener listener = new TrackingWorkingMemoryEventListener();
@@ -66,7 +66,7 @@ public class TrackingWorkingMemoryEventListenerTest {
         assertEquals(retractionCountBeforeInsertion, retractionCountAfterInsertion);
         assertEquals(updateCountBeforeInsertion, updateCountAfterInsertion);
     }
-    
+
     @Test
     public void shouldTrackFilteredUpdates() {
     
