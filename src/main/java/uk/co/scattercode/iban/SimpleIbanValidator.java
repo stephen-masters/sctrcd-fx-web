@@ -32,7 +32,7 @@ public class SimpleIbanValidator implements IbanValidator {
     public SimpleIbanValidator() {
         countryMap = new HashMap<String, CountryEnum>();
         for (CountryEnum c : CountryEnum.values()) {
-            countryMap.put(c.toString(), c);
+            countryMap.put(c.isoCode, c);
         }
     }
 
