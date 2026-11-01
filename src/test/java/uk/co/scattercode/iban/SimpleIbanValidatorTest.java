@@ -1,21 +1,22 @@
 package uk.co.scattercode.iban;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import uk.co.scattercode.iban.IbanValidator;
-import uk.co.scattercode.iban.Mod97Check;
-import uk.co.scattercode.iban.SimpleIbanValidator;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.FieldSource;
 
 /**
- * Unit tests for the {@link IbanValidator}.
- * 
+ * Unit tests for the {@link SimpleIbanValidator}. The IBAN lists are shared
+ * with {@link RuleBasedIbanValidatorTest}.
+ *
  * @author Stephen Masters
  */
-public class SimpleIbanValidatorTest {
+class SimpleIbanValidatorTest {
 
-	public static final String[] validIbans = {
-       	"BG29FINV915010EUR0IKFF",
+    public static final String[] validIbans = {
+        "BG29FINV915010EUR0IKFF",
         "ES5702170302862100282783",
         "SK3211000000002612890189",
         "ES23 0217 0099 47",
@@ -55,9 +56,9 @@ public class SimpleIbanValidatorTest {
         "CH93 0076 2011 6238 5295 7",
         "GB29 NWBK 6016 1331 9268 19",
         "TN59 1420 7207 1007 0712 9648"
-	};
-	
-	public static final String[] invalidIbans = {
+    };
+
+    public static final String[] invalidIbans = {
         "IT72C012574030100000000789",
         "ES050 217009945",
         "ES150 217002616",
@@ -68,24 +69,32 @@ public class SimpleIbanValidatorTest {
         "es190217009941",
         "LU36 0029 1534 6005 0000",
         "TN59 1421 7207 1007 0712 9648"
-	};
-	
-	SimpleIbanValidator simpleValidator = new SimpleIbanValidator();
-	
-    @Test
-    public final void shouldAcceptValidIbans() {
-    	for (String iban : validIbans) {
-            assertTrue(Mod97Check.isValid(iban));
-    		assertTrue(simpleValidator.validate(iban).isValid());
-    	}
+    };
+
+    /**
+     * Passes the MOD-97 check, but ZZ is not a country.
+     */
+    public static final String UNKNOWN_COUNTRY_IBAN = "ZZ77NWBK60161331926819";
+
+    SimpleIbanValidator simpleValidator = new SimpleIbanValidator();
+
+    @ParameterizedTest
+    @FieldSource("validIbans")
+    void shouldAcceptValidIbans(String iban) {
+        assertTrue(Mod97Check.isValid(iban));
+        assertTrue(simpleValidator.validate(iban).isValid());
     }
-    
-    @Test
-    public final void shouldRejectInvalidIbans() {
-    	for (String iban : invalidIbans) {
-            assertFalse(Mod97Check.isValid(iban));
-    	    assertFalse(simpleValidator.validate(iban).isValid());
-    	}
+
+    @ParameterizedTest
+    @FieldSource("invalidIbans")
+    void shouldRejectInvalidIbans(String iban) {
+        assertFalse(Mod97Check.isValid(iban));
+        assertFalse(simpleValidator.validate(iban).isValid());
     }
-    
+
+    @Test
+    void shouldRejectAnUnknownCountryThatPassesMod97() {
+        assertTrue(Mod97Check.isValid(UNKNOWN_COUNTRY_IBAN));
+        assertFalse(simpleValidator.validate(UNKNOWN_COUNTRY_IBAN).isValid());
+    }
 }
