@@ -3,27 +3,26 @@ package uk.co.scattercode.drools.util;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import org.drools.definition.rule.Rule;
-import org.drools.event.rule.DefaultAgendaEventListener;
-import org.drools.event.rule.AfterActivationFiredEvent;
+import org.kie.api.definition.rule.Rule;
+import org.kie.api.event.rule.AfterMatchFiredEvent;
+import org.kie.api.event.rule.DefaultAgendaEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * A listener that will track all rule firings in a session.
- * 
+ *
  * @author Stephen Masters
  */
 public class TrackingAgendaEventListener extends DefaultAgendaEventListener {
 
-    private static Logger log = LoggerFactory.getLogger(TrackingAgendaEventListener.class);
+    private static final Logger log = LoggerFactory.getLogger(TrackingAgendaEventListener.class);
 
-    private List<Activation> activationList = new ArrayList<Activation>();
+    private final List<Activation> activationList = new ArrayList<>();
 
     @Override
-    public void afterActivationFired(AfterActivationFiredEvent event) {
-        Rule rule = event.getActivation().getRule();
+    public void afterMatchFired(AfterMatchFiredEvent event) {
+        Rule rule = event.getMatch().getRule();
 
         String ruleName = rule.getName();
         Map<String, Object> ruleMetaDataMap = rule.getMetaData();
@@ -31,19 +30,21 @@ public class TrackingAgendaEventListener extends DefaultAgendaEventListener {
         activationList.add(new Activation(ruleName));
         StringBuilder sb = new StringBuilder("Rule fired: " + ruleName);
 
-        if (ruleMetaDataMap.size() > 0) {
+        if (!ruleMetaDataMap.isEmpty()) {
             sb.append("\n  With [" + ruleMetaDataMap.size() + "] meta-data:");
-            for (String key : ruleMetaDataMap.keySet()) {
-                sb.append("\n    key=" + key + ", value="
-                        + ruleMetaDataMap.get(key));
+            for (Map.Entry<String, Object> metaData : ruleMetaDataMap.entrySet()) {
+                sb.append("\n    key=" + metaData.getKey() + ", value=" + metaData.getValue());
             }
         }
 
         log.debug(sb.toString());
     }
 
+    /**
+     * Did a rule with exactly this name fire?
+     */
     public boolean isRuleFired(String ruleName) {
-        return activationList.contains(ruleName);
+        return activationList.stream().anyMatch(a -> a.getRuleName().equals(ruleName));
     }
 
     public void reset() {
@@ -55,7 +56,7 @@ public class TrackingAgendaEventListener extends DefaultAgendaEventListener {
     }
 
     public String activationsToString() {
-        if (activationList.size() == 0) {
+        if (activationList.isEmpty()) {
             return "No activations occurred.";
         } else {
             StringBuilder sb = new StringBuilder("Activations: ");
@@ -65,5 +66,4 @@ public class TrackingAgendaEventListener extends DefaultAgendaEventListener {
             return sb.toString();
         }
     }
-
 }

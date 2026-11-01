@@ -1,7 +1,6 @@
 package uk.co.scattercode.iban;
 
 public interface IbanValidator {
-	
-	public IbanValidationResult validate(String iban);
-    
+
+    IbanValidationResult validate(String iban);
 }

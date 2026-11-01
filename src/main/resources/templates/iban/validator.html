@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>IBAN validation</title>
+  <link rel="stylesheet" href="/resources/css/iban.css" th:href="@{/resources/css/iban.css}">
+  <script src="/resources/js/iban.js" th:src="@{/resources/js/iban.js}" defer></script>
+</head>
+<body>
+
+<div id="ibanValidator">
+  <!-- Without JavaScript the form still works, and shows the JSON result. -->
+  <form id="ibanForm" action="/iban/validate.json" th:action="@{/iban/validate.json}" method="get">
+    <div><label for="ibanRequest">IBAN Validator</label></div>
+    <input type="text" name="iban" id="ibanRequest">
+    <input type="submit" id="validateIbanBtn" value="Validate">
+    <div id="ibanValidationResults" aria-live="polite">&nbsp;</div>
+  </form>
+</div>
+
+</body>
+</html>
