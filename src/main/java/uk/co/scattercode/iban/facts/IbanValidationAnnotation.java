@@ -8,7 +8,7 @@ public class IbanValidationAnnotation {
     public IbanValidationAnnotation(boolean isValid) {
         this.isValid = isValid;
     }
-    
+
     public IbanValidationAnnotation(boolean isValid, String message) {
         this(isValid);
         this.message = message;
@@ -29,9 +29,9 @@ public class IbanValidationAnnotation {
     public void setMessage(String message) {
         this.message = message;
     }
-    
+
+    @Override
     public String toString() {
         return (isValid ? "Valid: " : "Not valid: ") + message;
     }
-    
 }

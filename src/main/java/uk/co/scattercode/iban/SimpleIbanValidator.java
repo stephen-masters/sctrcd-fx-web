@@ -2,17 +2,15 @@ package uk.co.scattercode.iban;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import org.springframework.stereotype.Service;
-
 import uk.co.scattercode.iban.enums.CountryEnum;
 
 /**
  * This IBAN validator does no more than check that the country code is for a
  * valid country and that the IBAN passes a MOD-97 check.
- * 
- * @see{Mod97IbanValidator for details of the MOD-97 check.
- * 
+ *
+ * @see Mod97Check for details of the MOD-97 check.
+ *
  * @author Stephen Masters
  */
 @Service("simpleIbanValidator")
@@ -28,12 +26,13 @@ public class SimpleIbanValidator implements IbanValidator {
      * defined in the {@link CountryEnum} enum.
      */
     public SimpleIbanValidator() {
-        countryMap = new HashMap<String, CountryEnum>();
+        countryMap = new HashMap<>();
         for (CountryEnum c : CountryEnum.values()) {
             countryMap.put(c.isoCode, c);
         }
     }
 
+    @Override
     public IbanValidationResult validate(String iban) {
         return new IbanValidationResult(iban, isValid(iban));
     }
@@ -41,8 +40,8 @@ public class SimpleIbanValidator implements IbanValidator {
     /**
      * Check that the country code is for a valid country and that the IBAN
      * passes a MOD-97 check.
-     * 
-     * @see{Mod97IbanValidator for details of the MOD-97 check.
+     *
+     * @see Mod97Check for details of the MOD-97 check.
      */
     private boolean isValid(String iban) {
         if (iban == null) {
@@ -56,5 +55,4 @@ public class SimpleIbanValidator implements IbanValidator {
         // the IBAN is valid.
         return Mod97Check.isValid(IbanUtil.sanitize(iban));
     }
-
 }

@@ -1,25 +1,29 @@
 package uk.co.scattercode.drools.util;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static uk.co.scattercode.drools.util.DroolsTestUtil.assertFactIsInWorkingMemory;
+import static uk.co.scattercode.drools.util.DroolsTestUtil.assertRuleFired;
 
-import org.drools.builder.ResourceType;
-import org.drools.runtime.ObjectFilter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.kie.api.io.ResourceType;
+import org.kie.api.runtime.ObjectFilter;
+import uk.co.scattercode.beans.BeanPropertyFilter;
 
-public class KnowledgeEnvironmentTest {
+class KnowledgeEnvironmentTest {
 
-    public static final ObjectFilter MESSAGE_FILTER = new ObjectFilter() {
-        public boolean accept(Object object) {
-            return object.getClass().getSimpleName()
-                    .equals("Message");
-        }
-    };
+    public static final ObjectFilter MESSAGE_FILTER =
+            object -> object.getClass().getSimpleName().equals("Message");
+
+    private static KnowledgeEnvironment newEnvironment() {
+        return new KnowledgeEnvironment(new DroolsResource[] {
+            new DroolsResource(
+                    "sctrcd/drools/util/KnowledgeEnvironmentTest.drl", ResourcePathType.CLASSPATH, ResourceType.DRL)
+        });
+    }
 
     @Test
-    public void shouldReloadOnCommand() {
-        KnowledgeEnvironment kenv = new KnowledgeEnvironment(
-                new DroolsResource[] {
-            new DroolsResource("sctrcd/drools/util/KnowledgeEnvironmentTest.drl", ResourcePathType.CLASSPATH, ResourceType.DRL)});
+    void shouldReloadOnCommand() {
+        KnowledgeEnvironment kenv = newEnvironment();
 
         assertEquals(0, kenv.getFactHandles(MESSAGE_FILTER).size());
         kenv.insert(new Message("Hello Droolers!"));
@@ -30,7 +34,18 @@ public class KnowledgeEnvironmentTest {
         assertEquals(1, kenv.getFactHandles(MESSAGE_FILTER).size());
     }
 
-    public class Message {
+    @Test
+    void shouldFireTheRuleAndModifyTheFact() {
+        KnowledgeEnvironment kenv = newEnvironment();
+
+        kenv.insert(new Message("Hello Droolers!"));
+        kenv.fireAllRules();
+
+        assertRuleFired(kenv, "Say hello");
+        assertFactIsInWorkingMemory(kenv, "Message", new BeanPropertyFilter("text", "Hello, World!"));
+    }
+
+    public static class Message {
         private String text;
 
         public Message(String text) {
@@ -45,5 +60,4 @@ public class KnowledgeEnvironmentTest {
             this.text = text;
         }
     }
-
 }

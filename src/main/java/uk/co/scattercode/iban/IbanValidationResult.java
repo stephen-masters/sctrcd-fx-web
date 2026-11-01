@@ -3,7 +3,6 @@ package uk.co.scattercode.iban;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import uk.co.scattercode.iban.facts.IbanValidationAnnotation;
 
 public class IbanValidationResult {
@@ -12,14 +11,14 @@ public class IbanValidationResult {
     private String electronicForm;
     private String displayForm;
     private boolean isValid = true;
-    private List<IbanValidationAnnotation> annotations = new ArrayList<IbanValidationAnnotation>();
+    private List<IbanValidationAnnotation> annotations = new ArrayList<>();
 
     public IbanValidationResult(String iban) {
         this.originalForm = iban;
         this.electronicForm = IbanUtil.sanitize(iban);
         this.displayForm = IbanFormatter.printFormat(iban);
     }
-            
+
     public IbanValidationResult(String iban, boolean isValid) {
         this(iban);
         this.isValid = isValid;
@@ -62,7 +61,7 @@ public class IbanValidationResult {
     }
 
     public void setAnnotations(List<IbanValidationAnnotation> annotations) {
-        this.annotations = new ArrayList<IbanValidationAnnotation>(annotations);
+        this.annotations = new ArrayList<>(annotations);
         for (IbanValidationAnnotation annotation : annotations) {
             rejectIfAnnotationRejects(annotation);
         }
@@ -74,8 +73,8 @@ public class IbanValidationResult {
     }
 
     /**
-     * For every annotation added to the result, 
-     * @param annotation
+     * For every annotation added to the result, mark the result invalid if
+     * the annotation rejects the IBAN.
      */
     private void rejectIfAnnotationRejects(IbanValidationAnnotation annotation) {
         if (!annotation.isValid()) {
@@ -83,9 +82,8 @@ public class IbanValidationResult {
         }
     }
 
+    @Override
     public String toString() {
-        return originalForm + " -> " + displayForm + " is "
-                + (isValid ? "valid" : "not valid");
+        return originalForm + " -> " + displayForm + " is " + (isValid ? "valid" : "not valid");
     }
-
 }

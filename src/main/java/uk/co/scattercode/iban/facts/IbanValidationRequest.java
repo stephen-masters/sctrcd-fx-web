@@ -7,11 +7,9 @@ import java.util.List;
 public class IbanValidationRequest {
 
     private String iban;
-    private List<IbanValidationAnnotation> annotations = new ArrayList<IbanValidationAnnotation>();
-    
-    public IbanValidationRequest() {
+    private List<IbanValidationAnnotation> annotations = new ArrayList<>();
 
-    }
+    public IbanValidationRequest() {}
 
     public IbanValidationRequest(String iban) {
         this.iban = iban;
@@ -32,9 +30,8 @@ public class IbanValidationRequest {
     public void addAnnotation(IbanValidationAnnotation annotation) {
         annotations.add(annotation);
     }
-    
+
     public void reject(String message) {
         annotations.add(new IbanValidationAnnotation(false, message));
     }
-
 }
